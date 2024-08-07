@@ -1,0 +1,27 @@
+#! /bin/bash
+
+if [ -z $1 ]; then
+	echo "usage: ./http-request [host-url]"
+	exit 1	
+fi
+
+if [ -f request-payload ]; then
+	cat request-payload
+else 
+	echo "error: file request-payload doesn't exist"
+	exit 2
+fi
+
+exec 3<>/dev/tcp/"$1"/80
+
+if [ ! $? -eq 0 ]; then
+	echo "error: host is incorrect or server is down"
+	exit 3
+fi
+
+cat request-payload >&3
+
+while read -r data <&3; do
+	echo $data
+	printf '%s\r\n' "$data" >> response.log
+done
