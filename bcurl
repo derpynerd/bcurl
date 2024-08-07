@@ -1,10 +1,12 @@
 #! /bin/bash
 
+# Check if host-url argument is specified
 if [ -z $1 ]; then
 	echo "usage: ./bcurl [host-url]"
 	exit 1	
 fi
 
+# Check if request-payload file exists & print to stdout
 if [ -f request-payload ]; then
 	cat request-payload
 else 
@@ -12,15 +14,19 @@ else
 	exit 2
 fi
 
+# Open file descriptor 3 to connect via TCP to specified host url
 exec 3<>/dev/tcp/"$1"/80
 
+# If TCP connection fails print error and exit
 if [ ! $? -eq 0 ]; then
 	echo "error: host is incorrect or server is down"
 	exit 3
 fi
 
+# Write request payload to file descriptor with TCP connection open
 cat request-payload >&3
 
+# While read line-wise input at file descriptor 3, print to stdout and store in response.log
 while read -r data <&3; do
 	echo $data
 	printf '%s\r\n' "$data" >> response.log
